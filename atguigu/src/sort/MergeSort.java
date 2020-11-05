@@ -11,7 +11,7 @@ public class MergeSort {
         int[] temp = new int[8];
         mergeSort(arr,0,arr.length-1,temp);
         System.out.println(Arrays.toString(arr));*/
-        int N = 8000000;//定义常量N
+        int N = 80000;//定义常量N
         int[] arr = new int[N];
         int[] temp = new int[N];
         for (int i = 0; i <N; i++) {
