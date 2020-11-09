@@ -1,11 +1,25 @@
 package sort;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 public class RadixSort {
     public static void main(String[] args) {
-        int[] arr = {53, 3, 542, 748, 14, 214};
+/*        int[] arr = {53, 3, 542, 748, 14, 214,46,897,152};
+        radixSort(arr);*/
+        int N = 8000000;
+        int[] arr = new int[N];
+        for (int i = 0; i <arr.length; i++) {
+            arr[i] = (int)(Math.random()*8000000);
+        }
+        Date date = new Date();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        String format = simpleDateFormat.format(date);
+        System.out.println(format);
         radixSort(arr);
+        Date date1 = new Date();
+        System.out.println(simpleDateFormat.format(date1));
     }
 
     /**
@@ -53,7 +67,7 @@ public class RadixSort {
             }
 
             n = n * 10;//用来下一轮的基数值求取
-            System.out.println("第" + j + "轮的基数排序的结果是" + Arrays.toString(arr));
+            /*System.out.println("第" + j + "轮的基数排序的结果是" + Arrays.toString(arr));*/
         }
     }
 }
