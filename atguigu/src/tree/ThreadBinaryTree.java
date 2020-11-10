@@ -1,5 +1,7 @@
 package tree;
 
+import java.util.ArrayList;
+
 public class ThreadBinaryTree {
     public static void main(String[] args) {
         //创建我们需要的二叉树
@@ -18,14 +20,24 @@ public class ThreadBinaryTree {
         hero3.setRight(hero7);
         //进行对二叉树的线索化以及测试
         ThreadedBinaryTree threadedBinaryTree = new ThreadedBinaryTree(root);
-        threadedBinaryTree.threadedBinaryTree();//4251637
-        System.out.println(root.getLeft());
-        System.out.println(root.getRight());
-        System.out.println(hero7.getLeft());
-        System.out.println(hero7.getRight());
-        //前序遍历二叉树
-        System.out.println("前序遍历");
-        threadedBinaryTree.preOrder();
+//        System.out.println(root.getLeft());
+//        System.out.println(root.getRight());
+//        System.out.println(hero7.getLeft());
+//        System.out.println(hero7.getRight());
+//        //中序遍历二叉树
+//        threadedBinaryTree.threadedBinaryTree();//4251637
+//        System.out.println("中序遍历");
+//        threadedBinaryTree.preOrder();
+//        System.out.println("中序线索化遍历");
+//        threadedBinaryTree.infixThreadList();
+//        前序线索化遍历
+//        threadedBinaryTree.preThreadBinaryTree();
+//        System.out.println("中序遍历线索化二叉树");
+//        threadedBinaryTree.preThreadList();
+        //后序线索化遍历
+        threadedBinaryTree.postThreadBinaryTree();
+        threadedBinaryTree.postThreadList();
+
     }
 }
 
@@ -36,6 +48,7 @@ class ThreadedBinaryTree {
 
     public ThreadedBinaryTree() {
     }
+
     public ThreadedBinaryTree(HeroNode1 root) {
         this.root = root;
     }
@@ -106,16 +119,16 @@ class ThreadedBinaryTree {
     }
 
     /**
-     *中序线索化遍历,采取非递归的方式进行
+     * 中序线索化遍历,采取非递归的方式进行
      * 其实这个遍历使用两种方式结合进行：
      * 1.用中序遍历的方式找到第一个应该遍历的节点
      * 2.当有线索时，就直接通过线索线性查找，速度快且方便
      * 3.后续线索如果中断就按照中序遍历左中右的遍历顺序从当前节点向左查找的尽头找到下一个应该遍历的节点，直到完成全部遍历
      */
-     public void infixThreadList(){
-        HeroNode1 node= root;
-        while(node!=null){//遍历到节点为null时，说明已经遍历完整个树，结束遍历跳出循环
-            while(node.getLeftType()==0){
+    public void infixThreadList() {
+        HeroNode1 node = root;
+        while (node != null) {//遍历到节点为null时，说明已经遍历完整个树，结束遍历跳出循环
+            while (node.getLeftType() == 0) {
                 //向左节点循环，找到第一个拥有前驱节点的左节点，就是我们需要的线索化中的第一个节点
                 //怎么理解：因为我们是中序遍历左中右的顺序，第一个一定是向左查找的尽头的节点，该节点没有左节点，所以一定会有leftType = 1,而且前继节点为pre = null】
                 //因为他是第一个节点，前面没有Node为pre赋值，所以pre为默认值null
@@ -123,7 +136,7 @@ class ThreadedBinaryTree {
             }
             //把当前节点输出
             System.out.println(node);
-            while(node.getRightType() == 1){
+            while (node.getRightType() == 1) {
                 //沿着线索的后继节点一直走，直到后继线索断掉，说明下一个线索是前驱条件
                 node = node.getRight();
                 System.out.println(node);
@@ -131,8 +144,69 @@ class ThreadedBinaryTree {
             //node已经输出过，按照中序的线索化方式，下一个节点肯定在右边，所以我们将node直接移到右边的下一个节点进行遍历
             node = node.getRight();
         }
-     }
+    }
 
+    /**
+     * 前序线索化遍历
+     * 中左右的顺序+线索
+     */
+    public void preThreadList() {
+        HeroNode1 node = root;
+        //前序线索化的第一个遍历的节点就是root，无需去查找
+        while (node != null) {
+            //按照先序线索化的方式，先输出当前的节点
+            System.out.println(node);
+            while (node.getRightType() == 1) {
+                node = node.getRight();
+                System.out.println(node);
+            }
+            //线索断掉，当前节点已经输出过
+            //！！！！！！天坑：不能走线索化后的指针，因为这里我们用的是原始的前序遍历的方式来寻找下一个遍历的节点
+            //走回去的话就容易死循环
+            if (node.getLeftType() != 1 && node.getLeft() != null) {
+                node = node.getLeft();
+            } else {
+                //此时只能向右查找，无论右边是否为null，如果是null,那么也就证明遍历到了尽头，将会结束循环；不是null的话就继续循环遍历
+                node = node.getRight();
+            }
+        }
+    }
+
+    /**
+     * 后序线索化遍历：按照后序左右中配合线索很难实现，怎么办？
+     * 巧思：之所以难以实现是因为线索化遍历节点后会让我们没有办法去找下一个节点，我们无法找到父节点的信息，遍历无法进行，而这一切的根源是因为后序的左右中的顺序中
+     * 父节点在最后处理，因此我们可以通过把父节点在前面输出。
+     * 我们可以逆序查找，即中右左的顺序遍历加上线索化的逆线索化（我们不用后继节点线索，而是用前驱节点线索，在逆序中后继就相当于前驱节点，前驱相当于后继）
+     * 将遍历的节点依次保存在ArrayList集合中，最后逆序输出即是我们的遍历结果
+     */
+    public void postThreadList() {
+        HeroNode1 node = root;
+        //root就是第一个节点
+        ArrayList<HeroNode1> list = new ArrayList<>();
+        //开始逆序遍历并保存过程
+        while (node != null) {
+            list.add(node);
+            //线索化遍历
+            while (node.getLeft() != null && node.getLeftType() == 1) {
+                node = node.getLeft();
+                list.add(node);
+            }
+            if (node.getRightType() == 0) {//还是老问题，在没有前驱线索时，走右节点只能走原始指针才是按照中右左的思路找下一个节点，否则容易死循环
+                node = node.getRight();
+            }else{
+                node = node.getLeft();
+            }
+        }
+
+        //最后把逆序过程再逆序打印就是我们的后序线索化遍历
+        int size = list.size();
+        for (int i = size - 1; i >= 0; i--) {
+            System.out.println(list.get(i));
+        }
+    }
+
+
+    //删除节点及其子树
     public void delNode(int no) {
         if (root == null) {
             System.out.println("空树，无需删除");
@@ -175,42 +249,120 @@ class ThreadedBinaryTree {
         }
     }
 
-    public void threadedBinaryTree(){
+
+    //重载前序线索化二叉树
+    public void preThreadBinaryTree() {
+        preThreadBinaryTree(root);
+    }
+
+    /**
+     * 前序线索化二叉树
+     *
+     * @param node
+     */
+    public void preThreadBinaryTree(HeroNode1 node) {
+        if (root == null) {
+            System.out.println("空树！");
+            return;
+        }
+        //首先对当前节点进行线索化
+        //添加前驱节点线索
+        if (node.getLeft() == null) {
+            node.setLeftType(1);
+            node.setLeft(pre);
+        }
+        //添加后继节点线索
+        if (pre != null && pre.getRight() == null) {//第一个节点的pre是null，也无需添加pre的后继节点
+            pre.setRightType(1);
+            pre.setRight(node);
+        }
+        //！！！！！记得用pre不断记录前继节点的位置，用来形成线索
+        pre = node;
+        //对左子树进行线索化
+        //！！！！！不能走线索化过的左指针，因为这里我们是通过前序遍历来进行线索化，只能使用原始的左指针，不然容易出现死循环
+        if (node.getLeftType() != 1 && node.getLeft() != null) {
+            preThreadBinaryTree(node.getLeft());
+        }
+        //对右子树进行递归线索化
+        if (node.getRight() != null) {
+            preThreadBinaryTree(node.getRight());
+        }
+    }
+
+    //对二叉树中序线索化的重载形式
+    public void threadedBinaryTree() {
         threadedBinaryTree(root);
     }
+
     /**
      * 将二叉树进行线索化，这里使用中序遍历的顺序进行线索化
      * 二叉树在线索化后一定是连贯的，即添加的线索可以把每一个节点相连，连成一个线性结构，线索上的前后两个节点之间都有一根线索（前驱节点线索和后继节点线索都可能）
      * 所以不算第线索中带一个节点的前驱节点，一共有（节点数量-1）根线索线
+     *
      * @param node 当前节点
      */
-    public void threadedBinaryTree(HeroNode1 node){
-        if(root == null){
+    public void threadedBinaryTree(HeroNode1 node) {
+        if (root == null) {
             System.out.println("空树");
             return;
         }
         //先对左子树进行递归线索化
-        if(node.getLeft()!=null){
+        if (node.getLeft() != null) {
             threadedBinaryTree(node.getLeft());
         }
 
         //对当前节点进行线索化遍历
-        if(node.getLeft() == null){
+        if (node.getLeft() == null) {
             node.setLeftType(1);
             node.setLeft(pre);
         }
-        if(pre!=null&&pre.getRight()==null){
+        if (pre != null && pre.getRight() == null) {
             pre.setRightType(1);
             pre.setRight(node);
         }
         pre = node;
 
         //对右子数进行递归线索化
-        if(node.getRight()!=null){
+        if (node.getRight() != null) {
             threadedBinaryTree(node.getRight());
         }
     }
 
+
+    //后序线索化二叉树的重载形式
+    public void postThreadBinaryTree() {
+        postThreadBinaryTree(root);
+    }
+
+    /**
+     * 后序线索化二叉树
+     *
+     * @param node
+     */
+    public void postThreadBinaryTree(HeroNode1 node) {
+        if (root == null) {
+            System.out.println("空树");
+            return;
+        }
+        //先对左子树进行线索化
+        if (node.getLeft() != null) {
+            postThreadBinaryTree(node.getLeft());
+        }
+        //对右子树进行线索化
+        if (node.getRight() != null) {
+            postThreadBinaryTree(node.getRight());
+        }
+        //对当前节点进行线索化处理
+        if (node.getLeft() == null) {
+            node.setLeftType(1);
+            node.setLeft(pre);
+        }
+        if (pre != null && pre.getRight() == null) {
+            pre.setRightType(1);
+            pre.setRight(node);
+        }
+        pre = node;
+    }
 }
 
 
@@ -220,19 +372,22 @@ class HeroNode1 {
     private HeroNode1 left;//左指针
     private HeroNode1 right;//右指针
 
-    private  int  leftType;//左指针状态
+    private int leftType;//左指针状态
     private int rightType;//右指针状态
 
-    public void setLeftType(int b){
+    public void setLeftType(int b) {
         this.leftType = b;
     }
-    public int getLeftType(){
+
+    public int getLeftType() {
         return this.leftType;
     }
-    public void setRightType(int b ){
+
+    public void setRightType(int b) {
         this.rightType = b;
     }
-    public int getRightType(){
+
+    public int getRightType() {
         return this.rightType;
     }
 
@@ -279,7 +434,7 @@ class HeroNode1 {
 
     @Override
     public String toString() {
-        return "HeroNode{" +
+        return "HeroNode1{" +
                 "no=" + no +
                 ", name='" + name + '\'' +
                 '}';
@@ -288,10 +443,10 @@ class HeroNode1 {
     //前序遍历
     public void preOrder() {
         System.out.println(this);
-        if (this.left != null && this.leftType==0) {
+        if (this.left != null && this.leftType == 0) {
             this.left.preOrder();
         }
-        if (this.right != null && this.rightType==0) {
+        if (this.right != null && this.rightType == 0) {
             this.right.preOrder();
         }
     }
